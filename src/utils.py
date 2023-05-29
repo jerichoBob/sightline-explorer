@@ -1,6 +1,15 @@
 import numpy as np
 import pandas as pd
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageDraw
+import matplotlib.pyplot as plt
+
+from base64 import b64encode
+from io import BytesIO
+from IPython.display import HTML
+
+
+from dataclasses import dataclass
+
 
 def show_image_stats(label, wl_image):
     print(f"---- {label} ------")
@@ -42,6 +51,7 @@ def make_image_corrections(wl_image, contrast, brightness, sharpness, scale_fact
 
     # Invert and convert to PIL image
     wl_image = Image.fromarray((wl_image * 255).astype(np.uint8))
+    # wl_image = Image.fromarray((wl_image * 255).astype('uint8'), 'RGB')
 
     # original size
     original_size = wl_image.size
@@ -66,7 +76,7 @@ def make_image_corrections(wl_image, contrast, brightness, sharpness, scale_fact
 
     return wl_image
 
-def rescale_coordinates(coords, s, flippedy, orig_image):
+def true_coordinates(coords, s, orig_image):
     """
     Rescale (x, y) coordinates from the displayed image back to the original image.
 
@@ -85,10 +95,29 @@ def rescale_coordinates(coords, s, flippedy, orig_image):
     y_original = int(coords['y'] / s) + 1
 
     # Adjust y-coordinate if the image was vertically flipped
-    if flippedy:
-        y_original = original_shape[0] - y_original
+    y_original = original_shape[0] - y_original
 
     return {'x': x_original, 'y': y_original}
+
+def display_coordinates(coords, s, orig_image):
+    """
+    Scale (x, y) coordinates from the original image to the displayed image.
+
+    Parameters:
+    coords (dict): The dictionary containing 'x' and 'y' coordinates on the original image.
+    s (float): The scaling factor used to resize the original image for display.
+    orig_image (Image): The original PIL image.
+
+    Returns:
+    dict: The dictionary with the rescaled 'x' and 'y' coordinates on the displayed image.
+    """
+    original_shape = np.shape(orig_image)
+    
+    # Calculate the display coordinates
+    x_display = int(coords['x'] * s)
+    y_display = original_shape[0] - int(coords['y'] * s)
+
+    return {'x': x_display, 'y': y_display}
 
 
 # handline dataframes
@@ -108,3 +137,115 @@ def remove_row_with_index(df, index):
 def remove_row_with_key(df, column, key):
     df = df[df[column] != key]
     return df
+
+
+def create_sparkline(data, **kwags):
+    '''
+    from: https://towardsdatascience.com/6-things-that-you-probably-didnt-know-you-could-do-with-pandas-d365b3362a55
+    with this you can put a formatted HTML sparkline into a df table like this:
+        df['Price History Line']  = df['Price History'].apply(create_sparkline)
+        HTML(df.drop(columns = ["Price History"]).to_html(escape=False))
+
+    '''
+    # Convert data to a list
+    data = list(data)
+    
+    # Create a figure and axis object with given size and keyword arguments
+    fig, ax = plt.subplots(1, 1, figsize=(3, 0.25), **kwags)
+    
+    # Plot the data
+    ax.plot(data)
+    
+    # Remove the spines from the plot
+    for k,v in ax.spines.items():
+        v.set_visible(False)
+        
+    # Remove the tick marks from the x and y axes
+    ax.set_xticks([])
+    ax.set_yticks([])
+    
+    # Plot a red dot at the last point of the data
+    plt.plot(len(data) - 1, data[len(data) - 1], 'r.')
+    
+    # Fill the area under the plot with alpha=0.1
+    ax.fill_between(range(len(data)), data, len(data)*[min(data)], alpha=0.1)
+    
+    # Close the plot to prevent displaying it
+    plt.close(fig)
+    
+    # Save the plot image as png and get its binary data
+    img = BytesIO()    
+    fig.savefig(img, format='png')
+    encoded = b64encode(img.getvalue()).decode('utf-8')  
+    
+    # Return the encoded image data as an HTML image tag
+    return '<img src="data:image/png;base64,{}"/>'.format(encoded)
+
+@dataclass
+class Sightline:
+    """Class for managing Sightlines"""
+    x: int # true (unscaled) coordinate x
+    y: int # true (unscaled) coordinate x
+    disp_x: int # display coordinate x
+    disp_y: int # display coordinate y
+    radius: int = 1
+    color: str = "#f70707"
+    label_alignment: str = "la" #https://pillow.readthedocs.io/en/stable/handbook/text-anchors.html#text-anchors
+    snr: float = 0.
+
+    def get_x(self):
+        return self.x
+    def get_y(self):
+        return self.y
+    
+    def get_disp_x(self):
+        return self.disp_x
+    def get_disp_y(self):
+        return self.disp_y    
+    
+
+    def get_radius(self):
+        return self.radius
+    
+    def set_radius(self, value): 
+        self.radius = value
+
+    def get_color(self):
+        return self.color
+    
+    def set_color(self, value): 
+        self.color = value
+
+    def get_snr(self):
+        return self.snr
+    
+    def set_snr(self, value): 
+        self.snr = value
+
+    
+
+# This just draws a box centered at (x,y) and sz from that center point in the n/e/s/w directions 
+def plotbox(plt, x, y, labels, align, sz, c):
+    for i in range(len(x)):
+        plt.plot(
+            [x[i]-sz, x[i]-sz, x[i]+sz, x[i]+sz, x[i]-sz], 
+            [y[i]-sz, y[i]+sz, y[i]+sz, y[i]-sz, y[i]-sz], 
+            '-', color=c)
+        # ha_ = align[i][0]
+        # va_ = align[i][1]
+        plt.text(x[i], y[i]+1.5*sz, labels[i], color=c);    
+
+def overlay_bbox(image, points, r, c):
+    # Ensure we're working with a copy of the image, not the original
+    image_copy = image.copy()
+
+    # Create a draw object
+    draw = ImageDraw.Draw(image_copy)
+
+    # Loop through the points
+    for x, y in points:
+        # Draw a rectangle (a bounding box) centered on x, y
+        box = [(x - r, y - r), (x + r, y + r)]
+        draw.rectangle(box, outline=c, width=2)
+
+    return image_copy
