@@ -8,3 +8,9 @@ galaxies are (assuming our lensing model is right for the lensing galaxy) - ray-
 I created a new environment for streamlit apps like this
 
 > conda create --name streamlit --file requirements.txt
+> conda activate streamlit
+> streamlit run src/main.py
+
+And you should see something like this:
+![sightline-explorer.png](./assets/sightline-explorer.png)
+
