@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-from PIL import Image, ImageEnhance, ImageDraw
+import PIL
+from PIL import Image, ImageEnhance, ImageDraw, ImageFont
 import matplotlib.pyplot as plt
 
 from base64 import b64encode
@@ -10,6 +11,10 @@ from IPython.display import HTML
 
 from dataclasses import dataclass
 
+def show_hdr(label, hdr):
+    print(f"---- {label} ------")
+    for i in hdr:
+        print(i,": ", hdr[i])
 
 def show_image_stats(label, wl_image):
     print(f"---- {label} ------")
@@ -41,84 +46,69 @@ def show_image_stats(label, wl_image):
 
 def make_image_corrections(wl_image, contrast, brightness, sharpness, scale_factor):
     # Replace NaN values with 0
-    wl_image = np.nan_to_num(wl_image)
+    cleansed_image = np.nan_to_num(wl_image)
 
     # Scale the data to the range 0-1
-    wl_image = (wl_image - np.min(wl_image)) / (np.max(wl_image) - np.min(wl_image))
+    cleansed_image = (cleansed_image - np.min(cleansed_image)) / (np.max(cleansed_image) - np.min(cleansed_image))
 
     # Flip the y-axis
-    wl_image = np.flipud(wl_image)
+    # cleansed_image = np.flipud(cleansed_image)
 
     # Invert and convert to PIL image
-    wl_image = Image.fromarray((wl_image * 255).astype(np.uint8))
-    # wl_image = Image.fromarray((wl_image * 255).astype('uint8'), 'RGB')
+    cleansed_image = Image.fromarray((cleansed_image * 255).astype(np.uint8))
+    # cleansed_image = Image.fromarray((cleansed_image * 255).astype('uint8'), 'RGB')
 
     # original size
-    original_size = wl_image.size
+    original_size = cleansed_image.size
 
     # new size
     new_size = [dimension * scale_factor for dimension in original_size]
+    print("orig size: ", original_size, " new size: ", new_size)
 
     # resize the image
-    wl_image = wl_image.resize(new_size, Image.NEAREST)
+    enhanced_image = cleansed_image.resize(new_size, Image.NEAREST)
+    
+    # Flip the y-axis
+    enhanced_image = enhanced_image.transpose(PIL.Image.FLIP_TOP_BOTTOM)
 
     # Adjust contrast
-    enhancer = ImageEnhance.Contrast(wl_image)
-    wl_image = enhancer.enhance(contrast)
+    enhancer = ImageEnhance.Contrast(enhanced_image)
+    enhanced_image = enhancer.enhance(contrast)
 
     # Adjust brightness
-    enhancer = ImageEnhance.Brightness(wl_image)
-    wl_image = enhancer.enhance(brightness)   
+    enhancer = ImageEnhance.Brightness(enhanced_image)
+    enhanced_image = enhancer.enhance(brightness)   
 
     # Adjust brightness
-    enhancer = ImageEnhance.Sharpness(wl_image)
-    wl_image = enhancer.enhance(sharpness)  
+    enhancer = ImageEnhance.Sharpness(enhanced_image)
+    enhanced_image = enhancer.enhance(sharpness)  
 
-    return wl_image
+    return cleansed_image, enhanced_image
 
-def true_coordinates(coords, s, orig_image):
+
+def display_to_image(x, y, image_scale, wl_image_display):
     """
-    Rescale (x, y) coordinates from the displayed image back to the original image.
-
-    Parameters:
-    coords (dict): The dictionary containing 'x' and 'y' coordinates on the displayed image.
-    s (float): The scaling factor used to resize the original image for display.
-    flippedy (bool): Indicates whether the original image was vertically flipped for display.
-    original_shape (tuple): The shape of the original image (height, width).
-
-    Returns:
-    dict: The dictionary with the rescaled 'x' and 'y' coordinates on the original image.
+    Convert display coordinates to original image coordinates.
     """
-    original_shape = np.shape(orig_image)
-    # Calculate the original coordinates
-    x_original = int(coords['x'] / s) + 1
-    y_original = int(coords['y'] / s) + 1
+    # original_x = int(round(x / image_scale)) + 1
+    # original_y = int(round((wl_image_display.height - y) / image_scale)) + 1
+    original_x = int(round(x / image_scale)) + 1
+    original_y = int(round((wl_image_display.height - y) / image_scale)) + 1
 
-    # Adjust y-coordinate if the image was vertically flipped
-    y_original = original_shape[0] - y_original
+    return original_x, original_y
 
-    return {'x': x_original, 'y': y_original}
-
-def display_coordinates(coords, s, orig_image):
+def image_to_display(x, y, image_scale, wl_image_original):
     """
-    Scale (x, y) coordinates from the original image to the displayed image.
-
-    Parameters:
-    coords (dict): The dictionary containing 'x' and 'y' coordinates on the original image.
-    s (float): The scaling factor used to resize the original image for display.
-    orig_image (Image): The original PIL image.
-
-    Returns:
-    dict: The dictionary with the rescaled 'x' and 'y' coordinates on the displayed image.
+    Convert original image coordinates to display coordinates.
     """
-    original_shape = np.shape(orig_image)
-    
-    # Calculate the display coordinates
-    x_display = int(coords['x'] * s)
-    y_display = original_shape[0] - int(coords['y'] * s)
+    # original_shape = np.shape(wl_image_original)
 
-    return {'x': x_display, 'y': y_display}
+    # display_x = int(round((x - 1) * image_scale))
+    # display_y = int(round((original_shape[0] - y + 1) * image_scale))
+    display_x = int(round((x - 1) * image_scale))
+    display_y = wl_image_original.height - int(round((y - 1) * image_scale))
 
+    return display_x, display_y
 
 # handline dataframes
 
@@ -180,6 +170,10 @@ def create_sparkline(data, **kwags):
     
     # Return the encoded image data as an HTML image tag
     return '<img src="data:image/png;base64,{}"/>'.format(encoded)
+def create_sparkline_table():
+    '''
+    unfortunately only works inside a jupyter notebook
+    '''
 
 @dataclass
 class Sightline:
@@ -222,7 +216,25 @@ class Sightline:
     def set_snr(self, value): 
         self.snr = value
 
+def get_square_bounds(center, radius):
+    return (
+        center[0] - radius,
+        center[1] - radius,
+        center[0] + radius,
+        center[1] + radius,
+    )    
     
+def draw_bbox(draw,s, index, scale, line_width):
+    bb = get_square_bounds([s.disp_x,s.disp_y], s.radius*scale)
+    draw.rectangle(bb, outline =s.color, width=line_width)
+    font = ImageFont.truetype("assets/Copilme-Regular.ttf", 3*scale)
+    if s.radius <2:
+        draw.text([bb[0],bb[1]], str(index), font = font, fill=s.color, anchor="rb")
+    else:
+        draw.text([bb[0]+1,bb[1]], str(index), font = font, fill=s.color, anchor="la")
+    return draw
+
+
 
 # This just draws a box centered at (x,y) and sz from that center point in the n/e/s/w directions 
 def plotbox(plt, x, y, labels, align, sz, c):
