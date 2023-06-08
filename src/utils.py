@@ -63,7 +63,7 @@ def make_image_corrections(wl_image, contrast, brightness, sharpness, scale_fact
 
     # new size
     new_size = [dimension * scale_factor for dimension in original_size]
-    print("orig size: ", original_size, " new size: ", new_size)
+    # print("orig size: ", original_size, " new size: ", new_size)
 
     # resize the image
     enhanced_image = cleansed_image.resize(new_size, Image.NEAREST)

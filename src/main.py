@@ -25,6 +25,7 @@ from matplotlib.text import TextToPath
 from matplotlib.font_manager import FontProperties
 from matplotlib.gridspec import GridSpec
 
+print("==========================================")
 matplotlib.use('Agg')
 
 st.set_page_config(
@@ -52,16 +53,21 @@ def load_fits_files(flux_filename,var_filename):
     print("locading again")
     base_path = "/Users/robertseaton/Desktop/Physics-NCState/---Research/FITS-data/J1429/"
 
+    print("Reading flux cube")
     hdr, flux = kcwi_io.open_kcwi_cube(base_path+flux_filename)
-    utils.show_hdr("flux hdr", hdr)
+    # utils.show_hdr("flux hdr", hdr)
+    print("flux cube read")
 
     wave = kcwi_u.build_wave(hdr)
+    print("Reading variance cube")
     _, var = kcwi_io.open_kcwi_cube(base_path+var_filename)
+    print("variance cube")
+
     return hdr, wave, flux, var
 
-hdr, wave, flux, var = load_fits_files("J1429_rb_flux.fits","J1429_rb_var.fits")
+hdr, wave, flux, var = load_fits_files("J1429_rb_flux.fits", "J1429_rb_var.fits")
 
-# initialize all of our application state
+# initialize application state
 if 'sightlines' not in st.session_state:
     st.session_state.sightlines = pd.DataFrame(columns=['x', 'y', 'radius', 'color', 'snr'])
 if 'current_sl' not in st.session_state:
@@ -76,7 +82,12 @@ if 'line_width' not in st.session_state:
     st.session_state.line_width = 1
 if 'radius' not in st.session_state:
     st.session_state.radius = 1
+if 'lap_counter' not in st.session_state:
+    st.session_state.lap_counter = 1
+else:
+    st.session_state.lap_counter += 1
 spectra = []
+print("Lap Counter: ", st.session_state.lap_counter)
 
 
 # our sidebar
@@ -121,10 +132,12 @@ with image_area:
     with aperture_area:
         draw_aperature_expander()
 
+    print("in...")
     wl_image_original=build_whitelight(hdr, flux, minwave=wavelength - band_width, maxwave=wavelength + band_width)
-    # utils.show_image_stats("BEFORE CORRECTIONS", wl_image) 
+    print("out...")
+    # utils.show_image_stats("BEFORE CORRECTIONS", wl_image_original) 
     wl_orig_PIL, wl_image_display = utils.make_image_corrections(wl_image_original, contrast, brightness, sharpness, image_scale)
-    # utils.show_image_stats("AFTER CORRECTIONS", wl_image)
+    # utils.show_image_stats("AFTER CORRECTIONS", wl_image_original)
     print("main: wl_orig_PIL size: ", wl_orig_PIL.size, " wl_image_display size: ", wl_image_display.size)
 
 
