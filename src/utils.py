@@ -58,15 +58,26 @@ def make_image_corrections(wl_image, contrast, brightness, sharpness, scale_fact
     cleansed_image = Image.fromarray((cleansed_image * 255).astype(np.uint8))
     # cleansed_image = Image.fromarray((cleansed_image * 255).astype('uint8'), 'RGB')
 
-    # original size
-    original_size = cleansed_image.size
+    width, height = cleansed_image.size
+    aspect_ratio = width / height
+
+    # If the original image is wider than it is tall
+    if width > height:
+        new_width = width * scale_factor
+        new_height = int(new_width / aspect_ratio)
+    # If the original image is taller than it is wide
+    else:
+        new_height = height * scale_factor
+        new_width = int(new_height * aspect_ratio)
+
+    new_size = (new_width, new_height)
 
     # new size
-    new_size = [dimension * scale_factor for dimension in original_size]
-    # print("orig size: ", original_size, " new size: ", new_size)
+    # new_size = [dimension * scale_factor for dimension in original_size] 
+    print("orig size: ", (width, height), " new size: ", new_size)
 
     # resize the image
-    enhanced_image = cleansed_image.resize(new_size, Image.NEAREST)
+    enhanced_image = cleansed_image.resize(new_size, Image.NEAREST) 
     
     # Flip the y-axis
     enhanced_image = enhanced_image.transpose(PIL.Image.FLIP_TOP_BOTTOM)
@@ -86,27 +97,23 @@ def make_image_corrections(wl_image, contrast, brightness, sharpness, scale_fact
     return cleansed_image, enhanced_image
 
 
-def display_to_image(x, y, image_scale, wl_image_display):
+def display_to_image(display_x, display_y, scale, wl_image_display):
     """
     Convert display coordinates to original image coordinates.
     """
-    # original_x = int(round(x / image_scale)) + 1
-    # original_y = int(round((wl_image_display.height - y) / image_scale)) + 1
-    original_x = int(round(x / image_scale)) + 1
-    original_y = int(round((wl_image_display.height - y) / image_scale)) + 1
+    display_h = wl_image_display.height
+    image_x = int(display_x / scale)+1
+    image_y = int((display_h - display_y+.5) / scale)
 
-    return original_x, original_y
+    return image_x, image_y
 
-def image_to_display(x, y, image_scale, wl_image_original):
+def image_to_display(image_x, image_y, scale, wl_image_display):
     """
     Convert original image coordinates to display coordinates.
     """
-    # original_shape = np.shape(wl_image_original)
-
-    # display_x = int(round((x - 1) * image_scale))
-    # display_y = int(round((original_shape[0] - y + 1) * image_scale))
-    display_x = int(round((x - 1) * image_scale))
-    display_y = wl_image_original.height - int(round((y - 1) * image_scale))
+    display_h = wl_image_display.height
+    display_x = int((image_x-1) * scale)
+    display_y = display_h - int(image_y * scale)
 
     return display_x, display_y
 
@@ -216,16 +223,16 @@ class Sightline:
     def set_snr(self, value): 
         self.snr = value
 
-def get_square_bounds(center, radius):
+def get_square_bounds(center, side):
     return (
-        center[0] - radius,
-        center[1] - radius,
-        center[0] + radius,
-        center[1] + radius,
+        center[0] - side/2,
+        center[1] - side/2,
+        center[0] + side/2,
+        center[1] + side/2,
     )    
     
-def draw_bbox(draw,s, index, scale, line_width):
-    bb = get_square_bounds([s.disp_x,s.disp_y], s.radius*scale)
+def draw_bbox(draw, s, index, scale, line_width):
+    bb = get_square_bounds([s.disp_x,s.disp_y], (2*s.radius+1)*scale)
     draw.rectangle(bb, outline =s.color, width=line_width)
     font = ImageFont.truetype("assets/Copilme-Regular.ttf", 3*scale)
     if s.radius <2:

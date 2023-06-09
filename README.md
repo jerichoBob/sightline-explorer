@@ -15,7 +15,8 @@ Kinda homely right now, I know. But it will get better. When you click on the fl
 4) The user can use the live SNR data to determine if the size and placement of the sampled area is appropriate. If not, the user can click on a different location of the image and repeat the above steps.
 5) Once happy with the spectra and SNR for this location, click the "Accept" button which will lock in the selection and save the relevant parameters (ie x,y location, bounding box size, color, SNR, etc). 
    <img src="./assets/sightline-explorer-accepted.png" width="500" >
-
+6) Clicking on the image again starts the whole process over again, this time with selection 1 and spectra 1. Do this several times and the UI starts to look less homely...
+   <img src="./assets/sightline-explorer-accepted.png" width="500" >
 
 
 

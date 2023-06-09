@@ -70,12 +70,12 @@ hdr, wave, flux, var = load_fits_files("J1429_rb_flux.fits", "J1429_rb_var.fits"
 # initialize application state
 if 'sightlines' not in st.session_state:
     st.session_state.sightlines = pd.DataFrame(columns=['x', 'y', 'radius', 'color', 'snr'])
-if 'current_sl' not in st.session_state:
-    st.session_state.current_sl = None
+if 'sl_current' not in st.session_state:
+    st.session_state.sl_current = None
 if 'spectra' not in st.session_state:
     st.session_state.spectra = pd.DataFrame(columns=['Spectrum'])
-if "point" not in st.session_state:
-    st.session_state.point = None
+if "pixel" not in st.session_state:
+    st.session_state.pixel = None
 if 'border_color' not in st.session_state:
     st.session_state.border_color = "#F70707"
 if 'line_width' not in st.session_state:
@@ -117,28 +117,24 @@ def draw_aperature_expander():
 
 aperture_area, one, two = st.columns([2, 1, 2])
 
-
 image_area, spectrum_area = st.columns([1,2])
 image_scale = 8
 
-def handle_button_click():
-    print("button clicked")
-    if st.session_state.current_sl is not None:
-        st.session_state.sightlines = utils.append_row(st.session_state.sightlines, st.session_state.current_sl)    
-        st.session_state.current_sl = None
+def handle_accept_button_click():
+    if st.session_state.sl_current is not None:
+        st.session_state.sightlines = utils.append_row(st.session_state.sightlines, st.session_state.sl_current)    
+        st.session_state.sl_current = None
 
 with image_area:
     image_area.subheader("Image")
     with aperture_area:
         draw_aperature_expander()
 
-    print("in...")
     wl_image_original=build_whitelight(hdr, flux, minwave=wavelength - band_width, maxwave=wavelength + band_width)
-    print("out...")
     # utils.show_image_stats("BEFORE CORRECTIONS", wl_image_original) 
     wl_orig_PIL, wl_image_display = utils.make_image_corrections(wl_image_original, contrast, brightness, sharpness, image_scale)
     # utils.show_image_stats("AFTER CORRECTIONS", wl_image_original)
-    print("main: wl_orig_PIL size: ", wl_orig_PIL.size, " wl_image_display size: ", wl_image_display.size)
+    # print("main: wl_orig_PIL size: ", wl_orig_PIL.size, " wl_image_display size: ", wl_image_display.size)
 
 
     with wl_image_display:
@@ -146,45 +142,33 @@ with image_area:
 
         draw = ImageDraw.Draw(image_rgb)
 
-        # draw all of the "permanent" sightlines
+        # draw all of the "permanent" sightline bounding boxes
         for index, s in st.session_state.sightlines.iterrows():
             draw = utils.draw_bbox(draw, s, index, image_scale, st.session_state.line_width)
-        # draw the current stightline
-        if st.session_state.current_sl is not None:
-            s = st.session_state.current_sl
+        # draw the current stightline bounding box
+        if st.session_state.sl_current is not None:
+            s = st.session_state.sl_current
             index = len(st.session_state.sightlines)
             utils.draw_bbox(draw, s, index, image_scale, st.session_state.line_width)
 
-
-        # del draw # done with the draw variable
-
         value = streamlit_image_coordinates(image_rgb, key="pil")
-        # st.write("image coordinates:", value)
 
-        st.button("Accept", on_click=handle_button_click, type="primary")
+        st.button("Accept", on_click=handle_accept_button_click, type="primary")
         if value is not None:
             # image_coords = utils.image_coordinates(value, image_scale, wl_image_original)
-            image_coords = utils.display_to_image(value["x"],value["y"], image_scale, wl_image_display)
-            point = image_coords[0], image_coords[1]
-            # st.write(point)
+            pixel = utils.display_to_image(value["x"],value["y"], image_scale, wl_image_display)
+            # pixel = image_coords[0], image_coords[1]
+            # st.write(pixel)
 
-            display_coords = utils.image_to_display(image_coords[0], image_coords[1], image_scale, wl_orig_PIL)
-            st.write("value coords: ", value["x"],value["y"], "image_coords coords: ", image_coords[0], image_coords[1], "  display_coords:", display_coords)
+            # display_coords = utils.image_to_display(pixel[0], pixel[1], image_scale, wl_orig_PIL)
+            display_coords = utils.image_to_display(pixel[0], pixel[1], image_scale, wl_image_display)
+            print("display coords (raw): ", value)
+            print(value, "->", pixel,"->", display_coords)
 
-            if point != st.session_state.point:  # if we need to add a new point
-                st.session_state.point = point
-
-                # st.session_state.sightlines = utils.append_row(st.session_state.sightlines, 
-                #                                                Sightline(x=image_coords[0], 
-                #                                                          y =image_coords[1], 
-                #                                                          disp_x=value["x"], 
-                #                                                          disp_y=value["y"], 
-                #                                                          radius=st.session_state.radius, 
-                #                                                          color=st.session_state.border_color, 
-                #                                                          label_alignment="la",
-                #                                                          snr=0.))
-                st.session_state.current_sl = Sightline(x=image_coords[0], 
-                                                        y =image_coords[1], 
+            if pixel != st.session_state.pixel:  # if we are now on a new pixel
+                st.session_state.pixel = pixel
+                st.session_state.sl_current = Sightline(x=pixel[0], 
+                                                        y =pixel[1], 
                                                         disp_x=value["x"], 
                                                         disp_y=value["y"], 
                                                         radius=st.session_state.radius, 
@@ -257,7 +241,7 @@ with spectrum_area:
     for index, s in st.session_state.sightlines.iterrows():
         cols[1].pyplot(draw_spectrum(index, s.x, s.y, wave, flux, var, s.radius, s.color))
 
-    if st.session_state.current_sl is not None:
-        s = st.session_state.current_sl
+    if st.session_state.sl_current is not None:
+        s = st.session_state.sl_current
         index = len(st.session_state.sightlines)
         cols[1].pyplot(draw_spectrum(index, s.x, s.y, wave, flux, var, s.radius, s.color))
