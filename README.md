@@ -16,7 +16,7 @@ Kinda homely right now, I know. But it will get better. When you click on the fl
 5) Once happy with the spectra and SNR for this location, click the "Accept" button which will lock in the selection and save the relevant parameters (ie x,y location, bounding box size, color, SNR, etc). 
    <img src="./assets/sightline-explorer-accepted.png" width="500" >
 6) Clicking on the image again starts the whole process over again, this time with selection 1 and spectra 1. Do this several times and the UI starts to look less homely...
-   <img src="./assets/sightline-explorer-accepted.png" width="500" >
+   <img src="./assets/sightline-explorer.png" width="500" >
 
 
 
@@ -27,7 +27,3 @@ I created a new environment for streamlit apps like this
 > conda create --name streamlit --file requirements.txt
 > conda activate streamlit
 > streamlit run src/main.py
-
-And you should be greeted with something that looks like this):
-![sightline-explorer.png](./assets/sightline-explorer.png)
-
