@@ -23,6 +23,6 @@ Kinda homely right now, I know. But it will get better. When you click on the fl
 
 I created a new environment for streamlit apps like this
 
-> conda create --name streamlit --file requirements.txt
+> conda create --name streamlit --file requirements.txt \\
 > conda activate streamlit
 > streamlit run src/main.py
