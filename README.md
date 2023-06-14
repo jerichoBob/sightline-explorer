@@ -21,8 +21,10 @@ Kinda homely right now, I know. But it will get better. When you click on the fl
 
 ## Environment Setup
 
-I created a new environment for streamlit apps like this
+To ease setup, create a new environment for your streamlit apps
 
-> conda create --name streamlit --file requirements.txt \\
-> conda activate streamlit
-> streamlit run src/main.py
+```sh
+conda create --name streamlit --file requirements.txt
+conda activate streamlit
+streamlit run src/main.py
+```

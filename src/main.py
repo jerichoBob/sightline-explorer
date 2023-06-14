@@ -86,6 +86,9 @@ if 'lap_counter' not in st.session_state:
     st.session_state.lap_counter = 1
 else:
     st.session_state.lap_counter += 1
+if 'rerun_active' not in st.session_state:
+    st.session_state.rerun_active = False
+
 spectra = []
 print("Lap Counter: ", st.session_state.lap_counter)
 
@@ -118,7 +121,7 @@ def draw_aperature_expander():
 aperture_area, one, two = st.columns([2, 1, 2])
 
 image_area, spectrum_area = st.columns([1,2])
-image_scale = 8
+image_scale = 10
 
 def handle_accept_button_click():
     if st.session_state.sl_current is not None:
@@ -151,7 +154,9 @@ with image_area:
             index = len(st.session_state.sightlines)
             utils.draw_bbox(draw, s, index, image_scale, st.session_state.line_width)
 
+
         value = streamlit_image_coordinates(image_rgb, key="pil")
+
 
         st.button("Accept", on_click=handle_accept_button_click, type="primary")
         if value is not None:
@@ -169,12 +174,15 @@ with image_area:
                 st.session_state.pixel = pixel
                 st.session_state.sl_current = Sightline(x=pixel[0], 
                                                         y =pixel[1], 
-                                                        disp_x=value["x"], 
-                                                        disp_y=value["y"], 
+                                                        # disp_x=value["x"], 
+                                                        # disp_y=value["y"], 
+                                                        disp_x=display_coords[0], 
+                                                        disp_y=display_coords[1],                                                         
                                                         radius=st.session_state.radius, 
                                                         color=st.session_state.border_color, 
                                                         label_alignment="la",
                                                         snr=0.)
+                st.session_state.rerun_active = True
                 st.experimental_rerun() # this immediately forces a run-run through the loop so that the last thing entered here will be drawn - kinda janky, but works for now
 
 flux_color = '#0055ff99'
@@ -196,6 +204,10 @@ def draw_spectrum(index, x, y, wave, flux, var, radius, color):
 
     mosaic_layout = '''LPPPPPPPPPP'''
     fig, ax = plt.subplot_mosaic(mosaic_layout, figsize=(12, 2))
+
+    # plt.text(-5, 60, 'Parabola $Y = x^2$', fontsize = 22)
+
+    # draw_text(ax['P'], "SNR: "+str(index), fontsize=18)
 
     draw_text(ax['L'], str(index), fontsize=18)
     ax['L'].set_axis_off()
@@ -245,3 +257,5 @@ with spectrum_area:
         s = st.session_state.sl_current
         index = len(st.session_state.sightlines)
         cols[1].pyplot(draw_spectrum(index, s.x, s.y, wave, flux, var, s.radius, s.color))
+
+print("end of main.py")
