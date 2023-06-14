@@ -1,5 +1,17 @@
 # sightline-explorer
 
+## Environment Setup
+
+To ease setup, create a new environment for your streamlit apps
+
+```sh
+conda create --name streamlit --file requirements.txt
+conda activate streamlit
+streamlit run src/main.py
+```
+
+## Description
+
 A streamlit app to aid in the exploration and understanding of DLAs using the gravitationally lensed images of background quasars such as J1429. Though this we study the small scale effects of DLAs, and specifically the faint emission lines within the DLAs to better understand the host galaxies. The more lines of sight we have, the better *triangulation* we will have to determine the location of the host galaxies - ray-tracing back to the host galaxies (assuming a correct lensing model for the lensing galaxy).
 
 **sightline-explorer** reads in a FITS flux data cube and an associated variance data cube and displays a whitelight (or suitable variant) of the flux cube to the user. This is the first thing you should see:
@@ -17,14 +29,3 @@ Kinda homely right now, I know. But it will get better. When you click on the fl
 6) Clicking on the image again starts the whole process over again, this time with selection 1 and spectra 1. Do this several times and the UI starts to look less homely...
    <img src="./assets/sightline-explorer.png" width="500" >
 
-
-
-## Environment Setup
-
-To ease setup, create a new environment for your streamlit apps
-
-```sh
-conda create --name streamlit --file requirements.txt
-conda activate streamlit
-streamlit run src/main.py
-```

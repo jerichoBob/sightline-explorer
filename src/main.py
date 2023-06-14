@@ -121,7 +121,7 @@ def draw_aperature_expander():
 aperture_area, one, two = st.columns([2, 1, 2])
 
 image_area, spectrum_area = st.columns([1,2])
-image_scale = 10
+image_scale = 6
 
 def handle_accept_button_click():
     if st.session_state.sl_current is not None:
