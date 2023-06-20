@@ -1,0 +1,12 @@
+conda install -c conda-forge streamlit
+pip install streamlit-drawable-canvas #gotta use pip for this, no conda version
+pip install streamlit-image-coordinates # same here. gotta use pip
+# not sure I am going to use this
+# conda install -c conda-forge mpld3
+conda install -c conda-forge matplotlib
+conda install -c conda-forge erfa
+conda install -c conda-forge astropy
+conda install -c conda-forge scipy
+conda install -c conda-forge ipympl
+conda install -c conda-forge astropy 
+conda install -c conda-forge scipy PyQT h5py
