@@ -1,3 +1,7 @@
+# NOTE: this requirements .txt file is to be used to create a streamlit development environment on your local machine
+#   conda create --name streamlit --file streamlit_env_requirements.txt
+#   conda activate streamlit
+#
 conda install -c conda-forge streamlit
 pip install streamlit-drawable-canvas #gotta use pip for this, no conda version
 pip install streamlit-image-coordinates # same here. gotta use pip
