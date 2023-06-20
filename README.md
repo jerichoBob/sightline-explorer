@@ -9,7 +9,9 @@ conda activate streamlit
 streamlit run src/main.py
 ```
 
-NOTE: the ``` requirements.txt ``` file was created with ``` pip freeze > requirements.txt ``` and is only used when deploying to the streamlit.app cloud environment (or when you prefer not to use conda)
+**NOTE:** the ``` requirements.txt ``` file was created with ``` pip freeze > requirements.txt ``` and is only used when deploying to the streamlit.app cloud environment (or when you prefer not to use conda).
+
+**NOTE:** This app uses [git-lfs](https://git-lfs.com/) to manage the large (>50MB) FITS data files pushed out with this deploy. Not relevant for you unless you plan on deploying apps with large data files to github.
 
 ## Description
 
