@@ -2,17 +2,19 @@
 
 ## Environment Setup
 
-To ease setup, create a new environment for your streamlit apps
+To run this streamlit app locally, create a new environment for your streamlit app
 
 ```sh
-conda create --name streamlit --file requirements.txt
+conda create --name streamlit --file streamlit_env_requirements.txt
 conda activate streamlit
 streamlit run src/main.py
 ```
 
+NOTE: the ``` requirements.txt ``` file was created with ``` pip freeze > requirements.txt ``` and is only used when deploying to the streamlit.app cloud environment (or when you prefer not to use conda)
+
 ## Description
 
-A streamlit app to aid in the exploration and understanding of DLAs using the gravitationally lensed images of background quasars such as J1429. Though this we study the small scale effects of DLAs, and specifically the faint emission lines within the DLAs to better understand the host galaxies. The more lines of sight we have, the better *triangulation* we will have to determine the location of the host galaxies - ray-tracing back to the host galaxies (assuming a correct lensing model for the lensing galaxy).
+A streamlit app to aid in the exploration and understanding the fine structure of the Circumgalactic Medium (CGM) and DLAs using the gravitationally lensed images of background quasars such as J1429. Though this we study the small scale effects of CGM and DLAs gases, and specifically the faint emission lines within the DLAs to better understand the host galaxies. The more lines of sight we have, the better *triangulation* we will have to determine the location of the host galaxies - ray-tracing back to the host galaxies (assuming a correct lensing model for the lensing galaxy).
 
 **sightline-explorer** reads in a FITS flux data cube and an associated variance data cube and displays a whitelight (or suitable variant) of the flux cube to the user. This is the first thing you should see:
 <img src="./assets/sightline-explorer-initial.png" width="500" >

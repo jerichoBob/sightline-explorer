@@ -50,8 +50,9 @@ st.title("J1429 Sightline Explorer")
 @st.cache_data
 def load_fits_files(flux_filename,var_filename):
     # load flux and variance fits file
-    print("locading again")
-    base_path = "/Users/robertseaton/Desktop/Physics-NCState/---Research/FITS-data/J1429/"
+    print("loading again")
+    # base_path = "/Users/robertseaton/Desktop/Physics-NCState/---Research/FITS-data/J1429/"
+    base_path = "data/"
 
     print("Reading flux cube")
     hdr, flux = kcwi_io.open_kcwi_cube(base_path+flux_filename)
