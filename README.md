@@ -2,8 +2,7 @@
 
 ## Environment Setup
 
-To run this streamlit app locally, create a new environment for your streamlit app
-
+To run this streamlit app locally, once you've done the necessary ```git clone git@github.com:jerichoBob/sightline-explorer.git```, create a new environment for your streamlit app, activate that environment and then run the app:
 ```sh
 conda create --name streamlit --file streamlit_env_requirements.txt
 conda activate streamlit
@@ -16,10 +15,14 @@ NOTE: the ``` requirements.txt ``` file was created with ``` pip freeze > requir
 
 A streamlit app to aid in the exploration and understanding the fine structure of the Circumgalactic Medium (CGM) and DLAs using the gravitationally lensed images of background quasars such as J1429. Though this we study the small scale effects of CGM and DLAs gases, and specifically the faint emission lines within the DLAs to better understand the host galaxies. The more lines of sight we have, the better *triangulation* we will have to determine the location of the host galaxies - ray-tracing back to the host galaxies (assuming a correct lensing model for the lensing galaxy).
 
-**sightline-explorer** reads in a FITS flux data cube and an associated variance data cube and displays a whitelight (or suitable variant) of the flux cube to the user. This is the first thing you should see:
+**sightline-explorer** reads in a FITS flux data cube and an associated variance data cube (both deployed with the app for now) and displays a whitelight (or suitable variant) of the flux cube to the user. 
+
+This is the first thing you should see:
 <img src="./assets/sightline-explorer-initial.png" width="500" >
 
-Kinda homely right now, I know. But it will get better. When you click on the flux image, the following will happen:
+Kinda homely right now, I know. But it will get better. 
+
+When you click on the flux image, the following will happen:
 
 1) A bounding numbered box will be drawn on the flux image representing the area being captured.
 2) A 1D spectral extraction of the flux and variance cube will be performed for the sampled area. This will be plotted on the right side of the app. The numbered label assocated with the sample area on the image will correspond to the number label next to the extracted spectra.
