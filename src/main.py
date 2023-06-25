@@ -25,6 +25,8 @@ from matplotlib.text import TextToPath
 from matplotlib.font_manager import FontProperties
 from matplotlib.gridspec import GridSpec
 
+from astropy.io import fits
+
 print("==========================================")
 matplotlib.use('Agg')
 
@@ -50,9 +52,18 @@ st.title("J1429 Sightline Explorer")
 @st.cache_data
 def load_fits_files(flux_filename,var_filename):
     # load flux and variance fits file
-    print("loading again")
+    print("load_fits_files")
     # base_path = "/Users/robertseaton/Desktop/Physics-NCState/---Research/FITS-data/J1429/"
     base_path = "data/"
+
+    myfile = fits.open(base_path+flux_filename)
+    print("myfile.info()")
+    myfile.info()
+    print("-------------------")
+    print("filename: ", myfile.filename)
+    print("-------------------")
+    print("myfile.fileinfo(0): ", myfile.fileinfo(0))
+    print("-------------------")
 
     print("Reading flux cube")
     hdr, flux = kcwi_io.open_kcwi_cube(base_path+flux_filename)
@@ -66,7 +77,7 @@ def load_fits_files(flux_filename,var_filename):
 
     return hdr, wave, flux, var
 
-hdr, wave, flux, var = load_fits_files("J1429_rb_flux.fits", "J1429_rb_var.fits")
+# hdr, wave, flux, var = load_fits_files("J1429_rb_flux.fits", "J1429_rb_var.fits")
 
 # initialize application state
 if 'sightlines' not in st.session_state:
@@ -93,6 +104,19 @@ if 'rerun_active' not in st.session_state:
 spectra = []
 print("Lap Counter: ", st.session_state.lap_counter)
 
+flux_file = st.sidebar.file_uploader("Select your Flux FITS file", type=['fits', 'fits.gz'])
+if flux_file is not None:
+    print("flux file_details: ", flux_file.name, flux_file.type, flux_file.size)
+
+variance_file = st.sidebar.file_uploader("Select your Variance FITS file", type=['fits', 'fits.gz'])
+if variance_file is not None:
+    print("variance file_details: ", variance_file.name, variance_file.type, variance_file.size)
+      
+
+if flux_file is not None and variance_file is not None:
+    print("Loading FITS files")
+    hdr, wave, flux, var = load_fits_files(flux_file.name, variance_file.name)
+    print("FITS files loaded")
 
 # our sidebar
 # image_scale = st.sidebar.slider('Image Scale', min_value=1, max_value=10, value=6, step=1)
@@ -103,6 +127,7 @@ sharpness  = st.sidebar.slider('Sharpness',  min_value=0.5, max_value=3.0, value
 wavelength = st.sidebar.slider('Wavelength Center:', min_value=3500, max_value=5500, value=4666)
 band_width  = st.sidebar.slider('Width', min_value=0, max_value=int(5500-3500/2), value=5, step=1)
 st.sidebar.write("Wavelength Range:", wavelength - band_width,"-", wavelength + band_width)
+
 
 def draw_aperature_expander():
     with st.expander("Aperture"):
