@@ -1,2 +1,0 @@
-data/J1429_rb_flux.fits filter=lfs diff=lfs merge=lfs -text
-data/J1429_rb_var.fits filter=lfs diff=lfs merge=lfs -text
