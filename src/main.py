@@ -43,11 +43,6 @@ st.set_page_config(
         'About': "# Sightline Explorer. CGM AND DLA Exploration!"
     }
 )
-# Create file uploaders for the flux and variance data cubes
-# flux_file = st.file_uploader("Upload flux data cube", type=['fits', 'fits.gz'])
-# variance_file = st.file_uploader("Upload variance data cube", type=['fits', 'fits.gz'])
-# to use this we would need to implement the streaming version of load_file found in kcwi_tools.
-# so we go basic
 
 st.title("J1429 Sightline Explorer")
 hdr = None
@@ -64,8 +59,7 @@ flux_tmp_filename = "tmp/flux.fits"
 def load_fits_files(flux_filename,var_filename):
     # load flux and variance fits file
     print("load_fits_files")
-    # base_path = "/Users/robertseaton/Desktop/Physics-NCState/---Research/FITS-data/J1429/"
-    # base_path = "data/"
+
 
 
     print("Reading flux cube: ", flux_filename)
@@ -134,7 +128,6 @@ if flux_file is not None and variance_file is not None:
     variance_file.close()
     os.remove(flux_tmp_filename)
     os.remove(var_tmp_filename)
-
 
 # our sidebar
 # image_scale = st.sidebar.slider('Image Scale', min_value=1, max_value=10, value=6, step=1)
@@ -207,7 +200,6 @@ with image_area:
             # pixel = image_coords[0], image_coords[1]
             # st.write(pixel)
 
-            # display_coords = utils.image_to_display(pixel[0], pixel[1], image_scale, wl_orig_PIL)
             display_coords = utils.image_to_display(pixel[0], pixel[1], image_scale, wl_image_display)
             print("display coords (raw): ", value)
             print(value, "->", pixel,"->", display_coords)
@@ -216,8 +208,6 @@ with image_area:
                 st.session_state.pixel = pixel
                 st.session_state.sl_current = Sightline(x=pixel[0], 
                                                         y =pixel[1], 
-                                                        # disp_x=value["x"], 
-                                                        # disp_y=value["y"], 
                                                         disp_x=display_coords[0], 
                                                         disp_y=display_coords[1],                                                         
                                                         radius=st.session_state.radius, 
@@ -246,10 +236,6 @@ def draw_spectrum(index, x, y, wave, flux, var, radius, color):
 
     mosaic_layout = '''LPPPPPPPPPP'''
     fig, ax = plt.subplot_mosaic(mosaic_layout, figsize=(12, 2))
-
-    # plt.text(-5, 60, 'Parabola $Y = x^2$', fontsize = 22)
-
-    # draw_text(ax['P'], "SNR: "+str(index), fontsize=18)
 
     draw_text(ax['L'], str(index), fontsize=18)
     ax['L'].set_axis_off()
