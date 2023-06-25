@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import os
+import io
+import tempfile
 
 from kcwitools import io as kcwi_io
 from kcwitools import spec as kcwi_s
@@ -38,7 +40,7 @@ st.set_page_config(
     menu_items={
         # 'Get Help': 'https://www.extremelycoolapp.com/help',
         # 'Report a bug': "https://www.extremelycoolapp.com/bug",
-        'About': "# Sightline Explorer. DLA and CGM Exploration!"
+        'About': "# Sightline Explorer. CGM AND DLA Exploration!"
     }
 )
 # Create file uploaders for the flux and variance data cubes
@@ -48,31 +50,33 @@ st.set_page_config(
 # so we go basic
 
 st.title("J1429 Sightline Explorer")
+hdr = None
+wave = None
+flux = None
+var = None
+wl_image_display = None
+
+# a workaround/hack for st.file-uploader()
+var_tmp_filename = "tmp/var.fits"
+flux_tmp_filename = "tmp/flux.fits"
 
 @st.cache_data
 def load_fits_files(flux_filename,var_filename):
     # load flux and variance fits file
     print("load_fits_files")
     # base_path = "/Users/robertseaton/Desktop/Physics-NCState/---Research/FITS-data/J1429/"
-    base_path = "data/"
+    # base_path = "data/"
 
-    myfile = fits.open(base_path+flux_filename)
-    print("myfile.info()")
-    myfile.info()
-    print("-------------------")
-    print("filename: ", myfile.filename)
-    print("-------------------")
-    print("myfile.fileinfo(0): ", myfile.fileinfo(0))
-    print("-------------------")
 
-    print("Reading flux cube")
-    hdr, flux = kcwi_io.open_kcwi_cube(base_path+flux_filename)
+    print("Reading flux cube: ", flux_filename)
+    # hdr, flux = kcwi_io.open_kcwi_cube(base_path+flux_filename)
+    hdr, flux = kcwi_io.open_kcwi_cube(flux_filename)
     # utils.show_hdr("flux hdr", hdr)
     print("flux cube read")
 
     wave = kcwi_u.build_wave(hdr)
-    print("Reading variance cube")
-    _, var = kcwi_io.open_kcwi_cube(base_path+var_filename)
+    print("Reading variance cube: ", var_filename)
+    _, var = kcwi_io.open_kcwi_cube(var_filename)
     print("variance cube")
 
     return hdr, wave, flux, var
@@ -105,18 +109,32 @@ spectra = []
 print("Lap Counter: ", st.session_state.lap_counter)
 
 flux_file = st.sidebar.file_uploader("Select your Flux FITS file", type=['fits', 'fits.gz'])
+
 if flux_file is not None:
     print("flux file_details: ", flux_file.name, flux_file.type, flux_file.size)
+    fp_flux = open(flux_tmp_filename, "wb")
+    fp_flux.write(flux_file.getvalue())
+    fp_flux.close()
+    flux_file.close()
+    # print(flux_file)
 
 variance_file = st.sidebar.file_uploader("Select your Variance FITS file", type=['fits', 'fits.gz'])
 if variance_file is not None:
     print("variance file_details: ", variance_file.name, variance_file.type, variance_file.size)
-      
+    fp_var = open(var_tmp_filename, "wb")
+    fp_var.write(variance_file.getvalue())
+    fp_var.close()
+    variance_file.close()
 
 if flux_file is not None and variance_file is not None:
     print("Loading FITS files")
-    hdr, wave, flux, var = load_fits_files(flux_file.name, variance_file.name)
+    hdr, wave, flux, var = load_fits_files(flux_tmp_filename, var_tmp_filename)
     print("FITS files loaded")
+    flux_file.close()
+    variance_file.close()
+    os.remove(flux_tmp_filename)
+    os.remove(var_tmp_filename)
+
 
 # our sidebar
 # image_scale = st.sidebar.slider('Image Scale', min_value=1, max_value=10, value=6, step=1)
@@ -159,14 +177,12 @@ with image_area:
     with aperture_area:
         draw_aperature_expander()
 
-    wl_image_original=build_whitelight(hdr, flux, minwave=wavelength - band_width, maxwave=wavelength + band_width)
-    # utils.show_image_stats("BEFORE CORRECTIONS", wl_image_original) 
-    wl_orig_PIL, wl_image_display = utils.make_image_corrections(wl_image_original, contrast, brightness, sharpness, image_scale)
-    # utils.show_image_stats("AFTER CORRECTIONS", wl_image_original)
-    # print("main: wl_orig_PIL size: ", wl_orig_PIL.size, " wl_image_display size: ", wl_image_display.size)
+    if hdr is not None and flux is not None:
+        wl_image_original=build_whitelight(hdr, flux, minwave=wavelength - band_width, maxwave=wavelength + band_width)
+        wl_orig_PIL, wl_image_display = utils.make_image_corrections(wl_image_original, contrast, brightness, sharpness, image_scale)
 
 
-    with wl_image_display:
+    if wl_image_display is not None:
         image_rgb = wl_image_display.convert('RGB')
 
         draw = ImageDraw.Draw(image_rgb)
