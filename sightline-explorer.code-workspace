@@ -5,6 +5,12 @@
 		},
 		{
 			"path": "../kcwitools"
+		},
+		{
+			"path": "../kcwitools-mod"
+		},
+		{
+			"path": "../CGM-learning"
 		}
 	],
 	"settings": {}

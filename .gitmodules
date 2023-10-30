@@ -1,0 +1,3 @@
+[submodule "CGM-learning"]
+	path = CGM-learning
+	url = https://github.com/jerichoBob/CGM-learning.git

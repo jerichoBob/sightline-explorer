@@ -1,0 +1,27 @@
+name: sl_explorer
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - streamlit
+  - python=3.9
+  - matplotlib
+  - astropy
+  - scipy
+  - ipympl
+  - pyqt
+  - h5py
+  # - pyerfa
+  - pip
+  - pip:
+    - streamlit-drawable-canvas
+    - streamlit-image-coordinates
+    - kcwitools@git+https://github.com/pypeit/kcwitools.git
+    - linetools==0.3.1
+    # - streamlit-vega-lite
+    # - streamlit-folium
+    # - streamlit-plotly-events
+      
+# not sure I am going to use this
+# conda install -c conda-forge mpld3
+   

@@ -139,14 +139,29 @@ wavelength = st.sidebar.slider('Wavelength Center:', min_value=3500, max_value=5
 band_width  = st.sidebar.slider('Width', min_value=0, max_value=int(5500-3500/2), value=5, step=1)
 st.sidebar.write("Wavelength Range:", wavelength - band_width,"-", wavelength + band_width)
 
+def create_circular_mask(r):
+    """
+    Creates a circular mask of radius r and normalizes that mask
+    """
+    n = 2*r + 1  # size of the output array
+    center = r  # center of the circular mask
 
+    # create a n x n array filled with the Euclidean distance from the center
+    y, x = np.ogrid[-center:n-center, -center:n-center]
+    mask = np.sqrt(x**2 + y**2)
+
+    mask = 1 - mask / (r+0.75)
+    mask[mask < 0] = 0 # make sure we don't have any negative values in the mask
+    mask /= np.sum(mask)  # Divide by the sum of all values
+
+    return mask
 def draw_aperature_expander():
     with st.expander("Aperture"):
         ap1,ap2,ap3 = st.columns([1,1,1])
 
         r = ap1.slider("Radius", min_value=1, max_value=10, value=st.session_state.radius, step=1, key='radius')
         fig, ax = plt.subplots()
-        mask = kcwi_s.create_circular_mask(r)
+        mask = create_circular_mask(r)
         ax.imshow(mask, cmap='gray')
         fig.canvas.draw()
         image_data = np.array(fig.canvas.renderer.buffer_rgba())
