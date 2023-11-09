@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit.runtime.uploaded_file_manager import UploadedFileRec
 # import streamlit.components.v1 as components
 # from streamlit_drawable_canvas import st_canvas
 from streamlit_image_coordinates import streamlit_image_coordinates
@@ -99,6 +100,8 @@ def init_session_state():
             'flux': None,
             'var': None
         }
+    if 'observations' not in st.session_state:
+        st.session_state.observations = load_observation_data()
 
     print("Lap Counter: ", st.session_state.lap_counter)
 
@@ -129,10 +132,10 @@ def load_fits_files(flux_filename,var_filename):
     st.session_state.fits_orig['wave'] = wave
     st.session_state.fits_orig['flux'] = flux
     st.session_state.fits_orig['var'] = var
-    print(f"st.session_state.fits_orig['hdr']:{st.session_state.fits_orig['hdr']}")
-    print(f"st.session_state.fits_orig['wave']:{st.session_state.fits_orig['wave']}")
-    print(f"st.session_state.fits_orig['flux']:{st.session_state.fits_orig['flux']}")
-    print(f"st.session_state.fits_orig['var']:{st.session_state.fits_orig['var']}")
+    # print(f"st.session_state.fits_orig['hdr']:{st.session_state.fits_orig['hdr']}")
+    # print(f"st.session_state.fits_orig['wave']:{st.session_state.fits_orig['wave']}")
+    # print(f"st.session_state.fits_orig['flux']:{st.session_state.fits_orig['flux']}")
+    # print(f"st.session_state.fits_orig['var']:{st.session_state.fits_orig['var']}")
 
 
 
@@ -194,7 +197,7 @@ def create_circular_mask(r):
 
     mask = 1 - mask / (r+0.75)
     mask[mask < 0] = 0 # make sure we don't have any negative values in the mask
-    mask /= np.sum(mask)  # Divide by the sum of all values
+    mask /= np.sum(mask)  # Divide each element by the sum -- normalizes the mask
 
     return mask
 
@@ -203,6 +206,8 @@ def draw_aperature_expander():
         ap1,ap2,ap3 = st.columns([1,1,1])
 
         r = ap1.slider("Radius", min_value=1, max_value=10, value=st.session_state.radius, step=1, key='radius')
+        box_width = ap1.slider("Box Width", min_value=1, max_value=10, value=st.session_state.width, step=1, key='width')
+        box_height = ap1.slider("Box Height", min_value=1, max_value=10, value=st.session_state.height, step=1, key='height')
         fig, ax = plt.subplots()
         mask = create_circular_mask(r)
         ax.imshow(mask, cmap='gray')
@@ -337,6 +342,11 @@ def show_main_area():
             index = len(st.session_state.sightlines)
             cols[1].pyplot(draw_spectrum(index, s.x, s.y, wave, flux, var, s.radius, s.color))
 
+@st.cache_data
+def load_observation_data():
+    """ returns a set of observations, but only once per session"""
+    print("load_observation_data")
+    return bu.get_corrected_kcwi_data()
 
 def main():
     print("==========================================")
@@ -347,6 +357,8 @@ def main():
     init_graphics()
     init_session_state()
     init_sidebar()
+
+
     show_main_area()
     
     print("==========================================")

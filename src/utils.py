@@ -182,46 +182,6 @@ def create_sparkline_table():
     unfortunately only works inside a jupyter notebook
     '''
 
-@dataclass
-class Sightline:
-    """Class for managing Sightlines"""
-    x: int # true (unscaled) coordinate x
-    y: int # true (unscaled) coordinate x
-    disp_x: int # display coordinate x
-    disp_y: int # display coordinate y
-    radius: int = 1
-    color: str = "#f70707"
-    label_alignment: str = "la" #https://pillow.readthedocs.io/en/stable/handbook/text-anchors.html#text-anchors
-    snr: float = 0.
-
-    def get_x(self):
-        return self.x
-    def get_y(self):
-        return self.y
-    
-    def get_disp_x(self):
-        return self.disp_x
-    def get_disp_y(self):
-        return self.disp_y    
-    
-
-    def get_radius(self):
-        return self.radius
-    
-    def set_radius(self, value): 
-        self.radius = value
-
-    def get_color(self):
-        return self.color
-    
-    def set_color(self, value): 
-        self.color = value
-
-    def get_snr(self):
-        return self.snr
-    
-    def set_snr(self, value): 
-        self.snr = value
 
 def get_square_bounds(center, side):
     return (
